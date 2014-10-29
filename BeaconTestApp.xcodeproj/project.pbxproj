@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		A10C65181A00974D0001FCE1 /* Default.png in Resources */ = {isa = PBXBuildFile; fileRef = A10C65151A00974D0001FCE1 /* Default.png */; };
+		A10C65191A00974D0001FCE1 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A10C65161A00974D0001FCE1 /* Default-568h@2x.png */; };
+		A10C651A1A00974D0001FCE1 /* Default@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = A10C65171A00974D0001FCE1 /* Default@2x.png */; };
 		C5835BC319EE0B4D00582AE1 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = C5835BB819EE0B4D00582AE1 /* AppDelegate.m */; };
 		C5835BC519EE0B4D00582AE1 /* BLE.m in Sources */ = {isa = PBXBuildFile; fileRef = C5835BBD19EE0B4D00582AE1 /* BLE.m */; };
 		C5835BC619EE0B4D00582AE1 /* LightingControlViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = C5835BBF19EE0B4D00582AE1 /* LightingControlViewController.m */; };
@@ -36,6 +39,9 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		A10C65151A00974D0001FCE1 /* Default.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = Default.png; sourceTree = "<group>"; };
+		A10C65161A00974D0001FCE1 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		A10C65171A00974D0001FCE1 /* Default@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default@2x.png"; sourceTree = "<group>"; };
 		C5835BB719EE0B4D00582AE1 /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		C5835BB819EE0B4D00582AE1 /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		C5835BBA19EE0B4D00582AE1 /* BeaconTestApp-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "BeaconTestApp-Prefix.pch"; sourceTree = "<group>"; };
@@ -86,9 +92,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A10C650E1A008DD50001FCE1 /* Images */ = {
+			isa = PBXGroup;
+			children = (
+				A10C65151A00974D0001FCE1 /* Default.png */,
+				A10C65161A00974D0001FCE1 /* Default-568h@2x.png */,
+				A10C65171A00974D0001FCE1 /* Default@2x.png */,
+			);
+			name = Images;
+			sourceTree = "<group>";
+		};
 		C5835BB619EE0B4D00582AE1 /* BeaconTestApp */ = {
 			isa = PBXGroup;
 			children = (
+				A10C650E1A008DD50001FCE1 /* Images */,
 				C5835BC919EE103B00582AE1 /* Main_iPhone.storyboard */,
 				C5835BB719EE0B4D00582AE1 /* AppDelegate.h */,
 				C5835BB819EE0B4D00582AE1 /* AppDelegate.m */,
@@ -241,7 +258,10 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10C651A1A00974D0001FCE1 /* Default@2x.png in Resources */,
 				C5835BCA19EE103B00582AE1 /* Main_iPhone.storyboard in Resources */,
+				A10C65181A00974D0001FCE1 /* Default.png in Resources */,
+				A10C65191A00974D0001FCE1 /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
