@@ -8,8 +8,7 @@
 
 #import "LightingControlViewController.h"
 
-//0xfc06
-#define UUID_ADATA_MAGIC            0x06fc//0xfc06
+#define UUID_ADATA_MAGIC            0xfc06
 
 @interface LightingControlViewController()
 
@@ -18,10 +17,15 @@
 @implementation LightingControlViewController
 
 @synthesize appDelegate;
+@synthesize palette;
 @synthesize waitingAlert;
-@synthesize brightImageView;
-@synthesize colorPaletteImageView;
+@synthesize colorBrightnessImageView;
+@synthesize colorWheelImageView;
 @synthesize colorTempImageView;
+@synthesize indicateImageView;
+@synthesize colorTempSlider;
+@synthesize colorBrightSlider;
+@synthesize powerSwitch;
 
 - (void)viewDidLoad
 {
@@ -33,9 +37,16 @@
     self.navigationItem.title =
         [[NSString alloc] initWithFormat:@"%@", appDelegate.adataBLE.currentPeripheralCtrl.name];
 
+    palette = [[LightingPaletteComponent alloc] init];
+
+    colorTempSlider = [[UISlider alloc] init];
+    colorBrightSlider = [[UISlider alloc] init];
     [self createWaitingAlert];
-    [self createColorPalette];
-    [self createColorLevelPalette:0.0 green:0 blue:0];
+    [self createColorWheelImageView];
+    [self createColorTempImageView];
+    [self createColorBrigtnessImageView];
+    [self createSliderAndSwitch];
+    isOutputRGB = FALSE;
 }
 
 - (void)viewWillDisappear:(BOOL)animated
@@ -59,7 +70,7 @@
 /**
  *  Create alert view until charateristic has been discovered for adata UUID.
  */
--(void) createWaitingAlert
+-(void)createWaitingAlert
 {
     waitingAlert = [[UIAlertView alloc] initWithTitle:@"PLEASE WAIT" message:@"Device under connecting" delegate:nil cancelButtonTitle:nil otherButtonTitles: nil];
     
@@ -70,7 +81,7 @@
 /**
  *  Dismiss alert view, it will trigger with all adata charateristic hasn been discovered.
  */
--(void) dismissWaitingAlert
+-(void)dismissWaitingAlert
 {
     [waitingAlert dismissWithClickedButtonIndex:0 animated:NO];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -80,7 +91,7 @@
 /**
  *  Get service characteristic according to UUID.
  */
-- (CBCharacteristic *) getCharacteristic:(NSString *)uuid
+- (CBCharacteristic *)getCharacteristic:(NSString *)uuid
 {
     for (AdataUUIDInfo *peripheral in appDelegate.adataBLE.adataUUIDPeripheral) {
         if ([peripheral.uuid isEqualToString:uuid]) {
@@ -95,10 +106,11 @@
 /**
  *  Send 0xFC06 to characteristic UUID 7878 to unlock adata feature.
  */
-- (void) unlockAdataUUIDMagic
+- (void)unlockAdataUUIDMagic
 {
     NSString *uuid = [[NSString alloc] initWithFormat:@"7878"];
-    uint magic = UUID_ADATA_MAGIC;
+    uint magic = ((UUID_ADATA_MAGIC & 0xff) << 8) |
+                 ((UUID_ADATA_MAGIC >> 8) & 0xff);
     NSData *magicData = [NSData dataWithBytes:&magic length:sizeof(magic)];
     CBCharacteristic *charateristic = [self getCharacteristic:uuid];
 
@@ -106,182 +118,325 @@
 }
 
 /**
- *  Send RGB value to remote BLE device.
+ *  Send Power state to remote BLE device.
  */
-- (void)setColorToBLEDevice:(int)red setGreen:(int)green setBlue:(int)blue
+-(void)setPowerStateToBLEDevice:(BOOL)isOn
 {
-    NSString *uuid = [[NSString alloc] initWithFormat:@"7883"];
-    NSLog(@"Red: %d, Green: %d, Blue: %d", red, green, blue);
-    UInt32 writeData = (red) | (green << 8) | (blue << 16);
+    NSString *uuid = [[NSString alloc] initWithFormat:@"7882"];
+    NSLog(@"PowerState: %d", isOn);
+    
+    UInt32 writeData = isOn;
     NSData *data = [NSData dataWithBytes:&writeData length:sizeof(writeData)];
     CBCharacteristic *charateristic = [self getCharacteristic:uuid];
     
     [appDelegate.adataBLE writeDataToUUID:charateristic data:data];
 }
 
+
+/**
+ *  Send RGB value to remote BLE device.
+ */
+- (void)setColorToBLEDeviceByRed:(CGFloat)red Green:(CGFloat)green Blue:(CGFloat)blue
+{
+    int setRed = red * 255;
+    int setGreen = green * 255;
+    int setBlue = blue * 255;
+
+    NSString *uuid = [[NSString alloc] initWithFormat:@"7883"];
+    NSLog(@"Red: %d, Green: %d, Blue: %d", setRed, setGreen, setBlue);
+
+    UInt32 writeData = (setRed) | (setGreen << 8) | (setBlue << 16);
+    NSData *data = [NSData dataWithBytes:&writeData length:sizeof(writeData)];
+    CBCharacteristic *charateristic = [self getCharacteristic:uuid];
+
+    [appDelegate.adataBLE writeDataToUUID:charateristic data:data];
+}
+
+/**
+ *  Send Color Temperature value to remote BLE device.
+ */
+-(void)setColorTempToBLEDeviceByColorTemp:(int)colorTemp Level:(int)level
+{
+    int setColorTemp = colorTemp * 100;
+    NSString *uuid = [[NSString alloc] initWithFormat:@"7884"];
+    NSLog(@"Color Temperature: %d, level: %d", setColorTemp, level);
+
+    UInt32 writeData = ((setColorTemp & 0xff) << 8) |
+                       ((setColorTemp >> 8) & 0xff) |
+                        level;
+    NSData *data = [NSData dataWithBytes:&writeData length:sizeof(writeData)];
+    CBCharacteristic *charateristic = [self getCharacteristic:uuid];
+
+    [appDelegate.adataBLE writeDataToUUID:charateristic data:data];
+}
+
 /**
  *  Create a simple color palette.
  */
-- (void) createColorPalette
+-(void)createColorWheelImageView
 {
-    //製作rgbr水平漸層的條盤
-    CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
-    
-    CGFloat components[] = {1.0, 0.0, 0.0, 1.0,
-                            1.0, 1.0, 0.0, 1.0,
-                            0.0, 1.0, 0.0, 1.0,
-                            0.0, 1.0, 1.0, 1.0,
-                            0.0, 0.0, 1.0, 1.0,
-                            1.0, 0.0, 1.0, 1.0,
-                            1.0, 0.0, 0.0, 1.0};
+    CGFloat notificationBarHeight = [[UIScreen mainScreen] bounds].size.height -
+                                    [[UIScreen mainScreen] applicationFrame].size.height;
+    CGFloat navigationHeight = self.navigationController.navigationBar.frame.size.height;
 
-    CGFloat locations[] = {0.0, 0.16, 0.33, 0.50, 0.66, 0.82, 1.0};
-    size_t count = 7;
+    CGFloat startPointX = notificationBarHeight / 2;
+    CGFloat startPointY = (notificationBarHeight * 2) +
+                          navigationHeight;
+    CGFloat imageWidth = [[UIScreen mainScreen] bounds].size.width - notificationBarHeight;
 
-    CGGradientRef gradient = CGGradientCreateWithColorComponents(rgb, components, locations, count);
-    CGColorSpaceRelease(rgb);
+    CGRect imageFrame = CGRectMake(startPointX, startPointY, imageWidth, imageWidth);
 
-    //設定整個調色盤區域的大小與位置
-    colorPaletteImageView = [[UIImageView alloc] initWithFrame:CGRectMake(20.0, 80.0, 280.0, 200.0)];
+    colorWheelImageView =
+            [[UIImageView alloc]initWithImage:[palette createColorWheelImageWithFrame:imageFrame]];
+    colorWheelImageView.frame = imageFrame;
 
-    UIGraphicsBeginImageContext(colorPaletteImageView.frame.size);
-    CGContextRef context = UIGraphicsGetCurrentContext();
+    [self.view addSubview:colorWheelImageView];
 
-    //漸層繪製保留最後10個像素來製作白色矩形
-    CGContextDrawLinearGradient(context, gradient, CGPointMake(0.0, 0.0), CGPointMake(280.0, 0.0), 0);
-
-    //rgbr水平漸層的條盤
-    UIImage *paletteImage = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-
-    //製作白黑垂直漸層的遮罩
-    CGFloat GrayComponents[] = {1.0, 1.0, 1.0, 1.0,
-                                0.5, 0.5, 0.5, 1.0,
-                                0.0, 0.0, 0.0, 1.0};
-
-    CGFloat GrayLocations[] = {1.0, 0.5, 0.0};
-    count = 3;
-
-    gradient = CGGradientCreateWithColorComponents(rgb, GrayComponents, GrayLocations, count);
-    CGColorSpaceRelease(rgb);
-
-    UIGraphicsBeginImageContext(colorPaletteImageView.frame.size);
-    context = UIGraphicsGetCurrentContext();
-
-    //以垂直方式繪製此漸層
-    CGContextDrawLinearGradient(context, gradient, CGPointMake(0.0, 0.0), CGPointMake(0.0, 200.0), 0);
-
-    //將兩者合成
-    CGContextSetBlendMode(context, kCGBlendModeMultiply);
-    CGRect drawRect = CGRectMake(0.0, 0.0, colorPaletteImageView.frame.size.width, colorPaletteImageView.frame.size.height);
-    CGContextDrawImage(context, drawRect, paletteImage.CGImage);
-    CGContextSaveGState(context);
-
-    //將合成結果顯示於畫面上
-    colorPaletteImageView.image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-
-    [self.view addSubview:colorPaletteImageView];
+    CGFloat indecateCenterX = startPointX + (imageWidth / 2);
+    CGFloat indecateCenterY = startPointY + (imageWidth / 2);
+    [self createIndicateImageViewAtX:indecateCenterX atY:indecateCenterY];
 }
 
--(void) createColorLevelPalette:(float)red green:(float)green blue:(float)blue
+-(void)createColorTempImageView
 {
-    CGColorSpaceRef rgb = CGColorSpaceCreateDeviceRGB();
+    CGFloat notificationBarHeight = [[UIScreen mainScreen] bounds].size.height -
+                                    [[UIScreen mainScreen] applicationFrame].size.height;
 
-    CGFloat components[] = {red, green, blue, 0.0,
-                            red, green, blue, 1.0};
+    CGFloat startPointX = colorWheelImageView.frame.origin.x;
+    CGFloat startPointY = colorWheelImageView.frame.origin.y +
+                          colorWheelImageView.frame.size.height +
+                          notificationBarHeight;
+    CGFloat imageWidth = colorWheelImageView.frame.size.width;
+    CGFloat imageHeight = colorTempSlider.frame.size.height;
+
+    CGRect imageFrame = CGRectMake(startPointX, startPointY, imageWidth, imageHeight);
+
+    colorTempImageView =
+            [[UIImageView alloc]initWithImage:[palette createColorTempImageWithFrame:imageFrame]];
+    colorTempImageView.frame = imageFrame;
     
-    CGFloat locations[] = {0.0, 1.0};
-    size_t count = 2;
-    
-    CGGradientRef gradient = CGGradientCreateWithColorComponents(rgb, components, locations, count);
-    CGColorSpaceRelease(rgb);
-    
-    brightImageView = [[UIImageView alloc] initWithFrame:CGRectMake(20, 300, 280, 30)];
-    UIGraphicsBeginImageContext(brightImageView.frame.size);
-    
-    CGContextRef context = UIGraphicsGetCurrentContext();
-    CGContextDrawLinearGradient(context, gradient, CGPointMake(0, 0), CGPointMake(280.0, 0), 0);
-    CGContextSaveGState(context);
-    
-    brightImageView.image = UIGraphicsGetImageFromCurrentImageContext();
-    UIGraphicsEndImageContext();
-    
-    [self.view addSubview:brightImageView];
+    [self.view addSubview:colorTempImageView];
 }
 
-//自行定義的函式，取得影像座標上的RGBA值
-- (void)getRGBAFromImage:(UIImage *)image atX:(int)xx andY:(int)yy {
+-(void)createColorBrigtnessImageView
+{
+    CGFloat notificationBarHeight = [[UIScreen mainScreen] bounds].size.height -
+                                    [[UIScreen mainScreen] applicationFrame].size.height;
+
+    CGFloat startPointX = colorTempImageView.frame.origin.x;
+    CGFloat startPointY = colorTempImageView.frame.origin.y +
+                          colorTempImageView.frame.size.height +
+                          notificationBarHeight;
+    CGFloat imageWidth = colorTempImageView.frame.size.width;
+    CGFloat imageHeight = colorBrightSlider.frame.size.height;
+
+    CGRect imageFrame = CGRectMake(startPointX, startPointY, imageWidth, imageHeight);
+
+    colorBrightnessImageView =
+            [[UIImageView alloc]initWithImage:[palette createColorBrightnessImageWithFrame:imageFrame]];
+    colorBrightnessImageView.frame = imageFrame;
     
-    CGImageRef imageRef = [image CGImage];
-    size_t width = CGImageGetWidth(imageRef);
-    size_t height = CGImageGetHeight(imageRef);
-
-    //從image的data buffer中取得影像，放入格式化後的rawData中
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    unsigned char *rawData = malloc(height * width * 4);
-    NSUInteger bytesPerPixel = 4;
-    NSUInteger bytesPerRow = bytesPerPixel * width;
-    NSUInteger bitsPerComponent = 8;
-    CGContextRef context = CGBitmapContextCreate(rawData,
-                                                 width,
-                                                 height,
-                                                 bitsPerComponent,
-                                                 bytesPerRow,
-                                                 colorSpace,
-                                                 kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
-    CGColorSpaceRelease(colorSpace);
-
-    CGContextDrawImage(context, CGRectMake(0, 0, width, height), imageRef);
-    CGContextRelease(context);
-
-    //將XY座標轉成一維陣列
-    int byteIndex = (bytesPerRow * yy) + (bytesPerPixel * xx);
-
-    //取得RGBA位元的資料並轉成0~1的格式
-    float red   = (float)(rawData[byteIndex]) / 255;
-    float green = (float)rawData[byteIndex + 1] / 255;
-    float blue  = (float)rawData[byteIndex + 2] / 255;
-
-    //輸出至colorView上
-    NSLog(@"R: %lf, G: %lf, B: %lf", red, green, blue);
-    [self setColorToBLEDevice:(255 * red) setGreen:(255 * green) setBlue:( 255 * blue)];
-    [self createColorLevelPalette:red green:green blue:blue];
-
-    free(rawData);
+    [self.view addSubview:colorBrightnessImageView];
+    [self.view addSubview:colorBrightSlider];
 }
 
-/**
- *  Get RGB value when image view has been touch.
- */
--(void) touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+-(void)createIndicateImageViewAtX:(CGFloat)x atY:(CGFloat)y
 {
-    float x, y;
+    CGFloat notificationBarHeight = [[UIScreen mainScreen] bounds].size.height -
+                                    [[UIScreen mainScreen] applicationFrame].size.height;
+    CGFloat startPointX = x - (notificationBarHeight / 2);
+    CGFloat startPointY = y - (notificationBarHeight / 2);
+    CGFloat imageWidth = notificationBarHeight;
+    CGRect imageFrame = CGRectMake(startPointX, startPointY, imageWidth, imageWidth);
 
-    //分別針對在一定時間量內所點擊的所有點做運算
-    for (UITouch *touch in touches) {
+    indicateImageView =
+            [[UIImageView alloc]initWithImage:[palette createColorIndicateImageWithFrame:imageFrame]];
+    indicateImageView.frame = imageFrame;
+    
+    [self.view addSubview:indicateImageView];
+}
 
-        //取得相對應的座標
-        x = [touch locationInView:colorPaletteImageView].x;
-        y = [touch locationInView:colorPaletteImageView].y;
 
-        //設定在view的範圍內才呼叫自行定義的函式
-        if ((x >= 0) && (x <= colorPaletteImageView.frame.size.width) && (y >= 0) && (y <= self.colorPaletteImageView.frame.size.height)) {
-            [self getRGBAFromImage:colorPaletteImageView.image atX:x andY:y];
+-(void)createSliderAndSwitch
+{
+    CGFloat notificationBarHeight = [[UIScreen mainScreen] bounds].size.height -
+                                    [[UIScreen mainScreen] applicationFrame].size.height;
+    UIImage *clearTrackerImage = [[UIImage alloc] init];
+
+    colorTempSlider.frame = colorTempImageView.frame;
+    colorTempSlider.minimumValue = COLOR_TEMP_MIN / 100;
+    colorTempSlider.maximumValue = COLOR_TEMP_MAX / 100;
+    colorTempSlider.value = colorTempSlider.minimumValue;
+    [colorTempSlider setMinimumTrackImage:clearTrackerImage forState:UIControlStateNormal];
+    [colorTempSlider setMaximumTrackImage:clearTrackerImage forState:UIControlStateNormal];
+    [colorTempSlider addTarget:self action:@selector(sliderValueChanged:) forControlEvents:UIControlEventValueChanged];
+    [self.view addSubview:colorTempSlider];
+
+    colorBrightSlider.frame = colorBrightnessImageView.frame;
+    colorBrightSlider.minimumValue = 0;
+    colorBrightSlider.maximumValue = 100;
+    colorBrightSlider.value = colorBrightSlider.maximumValue;
+    [colorBrightSlider setMinimumTrackImage:clearTrackerImage forState:UIControlStateNormal];
+    [colorBrightSlider setMaximumTrackImage:clearTrackerImage forState:UIControlStateNormal];
+    [colorBrightSlider addTarget:self action:@selector(sliderValueChanged:) forControlEvents:UIControlEventValueChanged];
+    [self.view addSubview:colorBrightSlider];
+    
+    CGFloat powerSwitchWidth = [[UISwitch alloc] init].frame.size.width;
+    CGFloat powerswitchHeight = [[UISwitch alloc] init].frame.size.height;
+    CGFloat powerSwitchPointX = colorBrightnessImageView.frame.origin.x +
+                                (colorBrightnessImageView.frame.size.width / 2) -
+                                (powerSwitchWidth / 2);
+    CGFloat powerSwitchPointY = colorBrightnessImageView.frame.origin.y +
+                                colorBrightnessImageView.frame.size.height +
+                                notificationBarHeight;
+    powerSwitch = [[UISwitch alloc] initWithFrame:CGRectMake(powerSwitchPointX,
+                                                             powerSwitchPointY,
+                                                             powerSwitchWidth,
+                                                             powerswitchHeight)];
+    [powerSwitch setOn:TRUE];
+    [powerSwitch addTarget:self action:@selector(swtichValueChanged:) forControlEvents:UIControlEventValueChanged];
+    [self.view addSubview:powerSwitch];
+}
+
+-(void)updateIndicatorImageAt:(CGFloat)x atY:(CGFloat)y
+{
+    [indicateImageView removeFromSuperview];
+    [self createIndicateImageViewAtX:x atY:y];
+}
+
+-(void)updateBrightnessImage
+{
+    [colorBrightnessImageView removeFromSuperview];
+    [self createColorBrigtnessImageView];
+}
+
+-(void)swtichValueChanged:(id)sender
+{
+    UISwitch *switchUI = (UISwitch *)sender;
+
+    if (switchUI == powerSwitch) {
+        if (switchUI.on) {
+            [self setPowerStateToBLEDevice:TRUE];
+        } else {
+            [self setPowerStateToBLEDevice:FALSE];
         }
     }
 }
 
-#if 0
--(void) touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
+-(void)sliderValueChanged:(id)sender
 {
-
+    UISlider *sliderUI = (UISlider *) sender;
+    int colorTemp = floor(colorTempSlider.value);
+    int level = floor(colorBrightSlider.value);
+    static int preColorTemp;
+    static int preLevel;
+    
+    if (sliderUI == colorTempSlider) {
+        if (preColorTemp != colorTemp) {
+            [palette setColorTempByUser:colorTemp];
+            [self updateBrightnessImage];
+            [self setColorTempToBLEDeviceByColorTemp:colorTemp Level:level];
+            isOutputRGB = FALSE;
+            preColorTemp = colorTemp;
+        }
+    } else if (sliderUI == colorBrightSlider) {
+        if (isOutputRGB) {
+            BitmapPixel rgbSettingValue;
+            rgbSettingValue = [self getRGBSetValue];
+            [self setColorToBLEDeviceByRed:rgbSettingValue.red Green:rgbSettingValue.green Blue:rgbSettingValue.blue];
+        } else {
+            if (preLevel != level) {
+                [self setColorTempToBLEDeviceByColorTemp:colorTemp Level:level];
+                preLevel = level;
+            }
+        }
+    }
 }
 
--(void) touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+-(BOOL)updateUIWithTouchEvent:(UITouch *)touch
 {
+    CGFloat x = [touch locationInView:self.view].x;
+    CGFloat y = [touch locationInView:self.view].y;
 
+    
+    if ((x >= colorWheelImageView.frame.origin.x) &&
+        (x < (colorWheelImageView.frame.origin.x +
+              colorWheelImageView.frame.size.width)) &&
+        (y >= colorWheelImageView.frame.origin.y) &&
+        (y < (colorWheelImageView.frame.origin.y +
+              colorWheelImageView.frame.size.height))) {
+        CGFloat imagePointX = [touch locationInView:colorWheelImageView].x;
+        CGFloat imagePointY = [touch locationInView:colorWheelImageView].y;
+        
+        if ([palette isValidPoint:(colorWheelImageView.frame.size.width / 2) atX:imagePointX atY:imagePointY]) {
+            [self updateIndicatorImageAt:x atY:y];
+            [self updateBrightnessImage];
+            return TRUE;
+        }
+    }
+
+    return FALSE;
 }
-#endif
+
+-(BitmapPixel)getRGBSetValue
+{
+    int level = floor(colorBrightSlider.value);
+    ColorConvertFormula *convert = [[ColorConvertFormula alloc] init];
+    BitMapHSV getHSVData = [convert RGBToHSVByRed:lastRGB.red Green:lastRGB.green Blue:lastRGB.blue];
+    BitmapPixel getRGBData =[convert HSVToRGBByHue:getHSVData.hue Saturation:getHSVData.saturation Value:getHSVData.value * (1 / level)];
+
+    return getRGBData;
+}
+
+-(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    UITouch *touch = [touches anyObject];
+
+    
+    if ([self updateUIWithTouchEvent:touch]) {
+        BitmapPixel rgbSettingValue;
+        
+        lastRGB = [palette getCurrentRGBAData];
+        rgbSettingValue = [self getRGBSetValue];
+
+        [self setColorToBLEDeviceByRed:rgbSettingValue.red Green:rgbSettingValue.green Blue:rgbSettingValue.blue];
+
+        updateTime = [[NSDate date]timeIntervalSince1970];
+        isOutputRGB = TRUE;
+    }
+}
+
+-(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    UITouch *touch = [touches anyObject];
+    double currentTime = [[NSDate date]timeIntervalSince1970];
+
+    if ([self updateUIWithTouchEvent:touch]) {
+        if ((currentTime - updateTime) > 0.100) {
+            BitmapPixel rgbSettingValue;
+
+            lastRGB = [palette getCurrentRGBAData];
+            rgbSettingValue = [self getRGBSetValue];
+
+            [self setColorToBLEDeviceByRed:rgbSettingValue.red Green:rgbSettingValue.green Blue:rgbSettingValue.blue];
+
+            updateTime = currentTime;
+        }
+    }
+}
+
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    UITouch *touch = [touches anyObject];
+
+    if ([self updateUIWithTouchEvent:touch]) {
+        BitmapPixel rgbSettingValue;
+
+        lastRGB = [palette getCurrentRGBAData];
+        rgbSettingValue = [self getRGBSetValue];
+
+        [self setColorToBLEDeviceByRed:rgbSettingValue.red Green:rgbSettingValue.green Blue:rgbSettingValue.blue];
+    }
+}
 
 @end

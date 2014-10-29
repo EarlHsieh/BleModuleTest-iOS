@@ -26,6 +26,8 @@
 		C5A8C2021980B1D100AFE4FC /* BeaconTestAppTests.m in Sources */ = {isa = PBXBuildFile; fileRef = C5A8C2011980B1D100AFE4FC /* BeaconTestAppTests.m */; };
 		C5A8C20C1980B4A600AFE4FC /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5A8C20B1980B4A600AFE4FC /* CoreBluetooth.framework */; };
 		C5A8C20E1980B4C000AFE4FC /* CoreLocation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C5A8C20D1980B4C000AFE4FC /* CoreLocation.framework */; };
+		C5AE08FA1A00AF4500012F98 /* ColorConvertFormula.m in Sources */ = {isa = PBXBuildFile; fileRef = C5AE08F71A00AF4500012F98 /* ColorConvertFormula.m */; };
+		C5AE08FB1A00AF4500012F98 /* LightingPaletteComponent.m in Sources */ = {isa = PBXBuildFile; fileRef = C5AE08F91A00AF4500012F98 /* LightingPaletteComponent.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -64,6 +66,10 @@
 		C5A8C2011980B1D100AFE4FC /* BeaconTestAppTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = BeaconTestAppTests.m; sourceTree = "<group>"; };
 		C5A8C20B1980B4A600AFE4FC /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 		C5A8C20D1980B4C000AFE4FC /* CoreLocation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreLocation.framework; path = System/Library/Frameworks/CoreLocation.framework; sourceTree = SDKROOT; };
+		C5AE08F61A00AF4500012F98 /* ColorConvertFormula.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ColorConvertFormula.h; sourceTree = "<group>"; };
+		C5AE08F71A00AF4500012F98 /* ColorConvertFormula.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ColorConvertFormula.m; sourceTree = "<group>"; };
+		C5AE08F81A00AF4500012F98 /* LightingPaletteComponent.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LightingPaletteComponent.h; sourceTree = "<group>"; };
+		C5AE08F91A00AF4500012F98 /* LightingPaletteComponent.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LightingPaletteComponent.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,14 +111,15 @@
 		C5835BB619EE0B4D00582AE1 /* BeaconTestApp */ = {
 			isa = PBXGroup;
 			children = (
-				A10C650E1A008DD50001FCE1 /* Images */,
-				C5835BC919EE103B00582AE1 /* Main_iPhone.storyboard */,
 				C5835BB719EE0B4D00582AE1 /* AppDelegate.h */,
 				C5835BB819EE0B4D00582AE1 /* AppDelegate.m */,
 				C5835BBA19EE0B4D00582AE1 /* BeaconTestApp-Prefix.pch */,
 				C5835BBB19EE0B4D00582AE1 /* BLE Model */,
+				A10C650E1A008DD50001FCE1 /* Images */,
 				C5835BBE19EE0B4D00582AE1 /* LightingControlViewController.h */,
 				C5835BBF19EE0B4D00582AE1 /* LightingControlViewController.m */,
+				C5AE08F51A00AF4500012F98 /* LightingPaletteComponent */,
+				C5835BC919EE103B00582AE1 /* Main_iPhone.storyboard */,
 				C5835BC019EE0B4D00582AE1 /* main.m */,
 				C5835BC119EE0B4D00582AE1 /* ViewController.h */,
 				C5835BC219EE0B4D00582AE1 /* ViewController.m */,
@@ -177,6 +184,17 @@
 				C5A8C1FE1980B1D100AFE4FC /* InfoPlist.strings */,
 			);
 			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		C5AE08F51A00AF4500012F98 /* LightingPaletteComponent */ = {
+			isa = PBXGroup;
+			children = (
+				C5AE08F61A00AF4500012F98 /* ColorConvertFormula.h */,
+				C5AE08F71A00AF4500012F98 /* ColorConvertFormula.m */,
+				C5AE08F81A00AF4500012F98 /* LightingPaletteComponent.h */,
+				C5AE08F91A00AF4500012F98 /* LightingPaletteComponent.m */,
+			);
+			path = LightingPaletteComponent;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -282,8 +300,10 @@
 			files = (
 				C5835BC819EE0B4D00582AE1 /* ViewController.m in Sources */,
 				C5835BC619EE0B4D00582AE1 /* LightingControlViewController.m in Sources */,
+				C5AE08FB1A00AF4500012F98 /* LightingPaletteComponent.m in Sources */,
 				C5835BC519EE0B4D00582AE1 /* BLE.m in Sources */,
 				C5835BC719EE0B4D00582AE1 /* main.m in Sources */,
+				C5AE08FA1A00AF4500012F98 /* ColorConvertFormula.m in Sources */,
 				C5835BC319EE0B4D00582AE1 /* AppDelegate.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
