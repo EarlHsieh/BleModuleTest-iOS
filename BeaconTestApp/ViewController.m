@@ -41,7 +41,12 @@
 }
 
 /**
- *  Return the number of sections in table view.
+ *  NAME
+ *      - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+ *
+ *  DESCRIPTION
+ *      Return the number of sections in table view.
+ *
  */
 - (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
 {
@@ -49,17 +54,26 @@
 }
 
 /**
- * Return the number of row in section.
+ *  NAME
+ *      -(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+ *
+ *  DESCRIPTION
+ *      Return the number of row in section.
  */
-- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
 {
     return [appDelegate.adataBLE.adataBLEScanPeripheral count];
 }
 
 /**
- *  Show text to cell in the table view.
+ *  NAME
+ *      - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+ *
+ *  DESCRIPTION
+ *      Show text to cell in the table view.
+ *
  */
-- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
 {
     static NSString *cellIdentifier = @"Cell";
     UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cellIdentifier];
@@ -77,9 +91,14 @@
 }
 
 /**
- *  Select cell to get peripheral and connect to BLE.
+ *  NAME
+ *      - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+ *
+ *  DESCRIPTION
+ *      Select cell to get peripheral and connect to BLE.
+ *
  */
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
 {
     appDelegate.adataBLE.currentPeripheralCtrl =
             [appDelegate.adataBLE.adataBLEScanPeripheral objectAtIndex:indexPath.row];
@@ -92,17 +111,27 @@
 }
 
 /**
- *  Update table view.
+ *  NAME
+ *      - (void) updateTableView
+ *
+ *  DESCRIPTION
+ *      Update table view.
+ *
  */
-- (void) updateTableView
+-(void)updateTableView
 {
     [self.tbvScan reloadData];
 }
 
 /**
- *  Remove BLE scan info and reload table view.
+ *  NAME
+ *      - (void)removeBLEInfo
+ *
+ *  DESCRIPTION
+ *      Remove BLE scan info and reload table view.
+ *
  */
-- (void)removeBLEInfo
+-(void)removeBLEInfo
 {
     [appDelegate.adataBLE.adataBLEScanPeripheral removeAllObjects];
     [[NSNotificationCenter defaultCenter] removeObserver:self];
@@ -110,9 +139,14 @@
 }
 
 /**
- *  Press this button to scan adata lighting device.
+ *  NAME
+ *      - (IBAction)btnScanController:(id)sender
+ *
+ *  DESCRIPTION
+ *      Press this button to scan adata lighting device.
+ *
  */
-- (IBAction)btnScanController:(id)sender
+-(IBAction)btnScanController:(id)sender
 {
     switch (self.myScanSegmentedCtrl.selectedSegmentIndex) {
         case STOP_SCAN:

@@ -68,7 +68,12 @@
 }
 
 /**
- *  Create alert view until charateristic has been discovered for adata UUID.
+ *  NAME
+ *      -(void)createWaitingAlert
+ *
+ *  DESCRIPTION
+ *      Create alert view until charateristic has been discovered for adata UUID.
+ *
  */
 -(void)createWaitingAlert
 {
@@ -79,7 +84,12 @@
 }
 
 /**
- *  Dismiss alert view, it will trigger with all adata charateristic hasn been discovered.
+ *  NAME
+ *      -(void)dismissWaitingAlert
+ *
+ *  DESCRIPTION
+ *      Dismiss alert view, it will trigger with all adata charateristic hasn been discovered.
+ *
  */
 -(void)dismissWaitingAlert
 {
@@ -89,7 +99,12 @@
 }
 
 /**
- *  Get service characteristic according to UUID.
+ *  NAME
+ *      - (CBCharacteristic *)getCharacteristic:(NSString *)uuid
+ *
+ *  DESCRIPTION
+ *      Get service characteristic according to UUID.
+ *
  */
 - (CBCharacteristic *)getCharacteristic:(NSString *)uuid
 {
@@ -104,9 +119,14 @@
 
 
 /**
- *  Send 0xFC06 to characteristic UUID 7878 to unlock adata feature.
+ *  NAME
+ *      -(void)unlockAdataUUIDMagic
+ *
+ *  DESCRIPTION
+ *      Send 0xFC06 to characteristic UUID 7878 to unlock adata feature.
+ *
  */
-- (void)unlockAdataUUIDMagic
+-(void)unlockAdataUUIDMagic
 {
     NSString *uuid = [[NSString alloc] initWithFormat:@"7878"];
     uint magic = ((UUID_ADATA_MAGIC & 0xff) << 8) |
@@ -118,7 +138,12 @@
 }
 
 /**
- *  Send Power state to remote BLE device.
+ *  NAME
+ *      -(void)setPowerStateToBLEDevice:(BOOL)isOn
+ *
+ *  DESCRIPTION
+ *      Send Power state to remote BLE device.
+ *
  */
 -(void)setPowerStateToBLEDevice:(BOOL)isOn
 {
@@ -134,9 +159,14 @@
 
 
 /**
- *  Send RGB value to remote BLE device.
+ *  NAME
+ *      -(void)setColorToBLEDeviceByRed:(CGFloat)red Green:(CGFloat)green Blue:(CGFloat)blue
+ *
+ *  DESCRIPTION
+ *      Send RGB value to remote BLE device.
+ *
  */
-- (void)setColorToBLEDeviceByRed:(CGFloat)red Green:(CGFloat)green Blue:(CGFloat)blue
+-(void)setColorToBLEDeviceByRed:(CGFloat)red Green:(CGFloat)green Blue:(CGFloat)blue
 {
     int setRed = red * 255;
     int setGreen = green * 255;
@@ -153,7 +183,12 @@
 }
 
 /**
- *  Send Color Temperature value to remote BLE device.
+ *  NAME
+ *      -(void)setColorTempToBLEDeviceByColorTemp:(int)colorTemp Level:(int)level
+ *
+ *  DESCRIPTION
+ *      Send Color Temperature value to remote BLE device.
+ *
  */
 -(void)setColorTempToBLEDeviceByColorTemp:(int)colorTemp Level:(int)level
 {
@@ -171,7 +206,12 @@
 }
 
 /**
- *  Create a simple color palette.
+ *  NAME
+ *      -(void)createColorWheelImageView
+ *
+ *  DESCRIPTION
+ *      Create a simple color palette.
+ *
  */
 -(void)createColorWheelImageView
 {
@@ -189,6 +229,8 @@
     colorWheelImageView =
             [[UIImageView alloc]initWithImage:[palette createColorWheelImageWithFrame:imageFrame]];
     colorWheelImageView.frame = imageFrame;
+    colorWheelImageView.layer.masksToBounds = YES;
+    colorWheelImageView.layer.cornerRadius = imageWidth / 2;
 
     [self.view addSubview:colorWheelImageView];
 
@@ -197,6 +239,14 @@
     [self createIndicateImageViewAtX:indecateCenterX atY:indecateCenterY];
 }
 
+/**
+ *  NAME
+ *      -(void)createColorTempImageView
+ *
+ *  DESCRIPTION
+ *      Create color temperature image view.
+ *
+ */
 -(void)createColorTempImageView
 {
     CGFloat notificationBarHeight = [[UIScreen mainScreen] bounds].size.height -
@@ -218,6 +268,14 @@
     [self.view addSubview:colorTempImageView];
 }
 
+/**
+ *  NAME
+ *      -(void)createColorBrigtnessImageView
+ *
+ *  DESCRIPTION
+ *      Create color brightness image view.
+ *
+ */
 -(void)createColorBrigtnessImageView
 {
     CGFloat notificationBarHeight = [[UIScreen mainScreen] bounds].size.height -
@@ -240,6 +298,14 @@
     [self.view addSubview:colorBrightSlider];
 }
 
+/**
+ *  NAME
+ *      -(void)createIndicateImageViewAtX:(CGFloat)x atY:(CGFloat)y
+ *
+ *  DESCRIPTION
+ *      create indicate image view.
+ *
+ */
 -(void)createIndicateImageViewAtX:(CGFloat)x atY:(CGFloat)y
 {
     CGFloat notificationBarHeight = [[UIScreen mainScreen] bounds].size.height -
@@ -257,12 +323,21 @@
 }
 
 
+/**
+ *  NAME
+ *      createSliderAndSwitch
+ *
+ *  DESCRIPTION
+ *      Create colorTempSlider, colorBrightSlider, powerSwitch.
+ *
+ */
 -(void)createSliderAndSwitch
 {
     CGFloat notificationBarHeight = [[UIScreen mainScreen] bounds].size.height -
                                     [[UIScreen mainScreen] applicationFrame].size.height;
     UIImage *clearTrackerImage = [[UIImage alloc] init];
 
+    //Create color temp slider
     colorTempSlider.frame = colorTempImageView.frame;
     colorTempSlider.minimumValue = COLOR_TEMP_MIN / 100;
     colorTempSlider.maximumValue = COLOR_TEMP_MAX / 100;
@@ -272,6 +347,7 @@
     [colorTempSlider addTarget:self action:@selector(sliderValueChanged:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:colorTempSlider];
 
+    //Create color bright slider
     colorBrightSlider.frame = colorBrightnessImageView.frame;
     colorBrightSlider.minimumValue = 0;
     colorBrightSlider.maximumValue = 100;
@@ -280,7 +356,8 @@
     [colorBrightSlider setMaximumTrackImage:clearTrackerImage forState:UIControlStateNormal];
     [colorBrightSlider addTarget:self action:@selector(sliderValueChanged:) forControlEvents:UIControlEventValueChanged];
     [self.view addSubview:colorBrightSlider];
-    
+
+    //Create power switch.
     CGFloat powerSwitchWidth = [[UISwitch alloc] init].frame.size.width;
     CGFloat powerswitchHeight = [[UISwitch alloc] init].frame.size.height;
     CGFloat powerSwitchPointX = colorBrightnessImageView.frame.origin.x +
@@ -289,6 +366,7 @@
     CGFloat powerSwitchPointY = colorBrightnessImageView.frame.origin.y +
                                 colorBrightnessImageView.frame.size.height +
                                 notificationBarHeight;
+
     powerSwitch = [[UISwitch alloc] initWithFrame:CGRectMake(powerSwitchPointX,
                                                              powerSwitchPointY,
                                                              powerSwitchWidth,
@@ -298,31 +376,68 @@
     [self.view addSubview:powerSwitch];
 }
 
+/**
+ *  NAME
+ *      -(void)updateIndicatorImageAt:(CGFloat)x atY:(CGFloat)y
+ *
+ *  DESCRIPTION
+ *      remove and re-create indicator image
+ *
+ */
 -(void)updateIndicatorImageAt:(CGFloat)x atY:(CGFloat)y
 {
     [indicateImageView removeFromSuperview];
     [self createIndicateImageViewAtX:x atY:y];
 }
 
+/**
+ *  NAME
+ *      -(void)updateBrightnessImage
+ *
+ *  DESCRIPTION
+ *      remove and re-create color brightness image.
+ *
+ */
 -(void)updateBrightnessImage
 {
     [colorBrightnessImageView removeFromSuperview];
     [self createColorBrigtnessImageView];
 }
 
+/**
+ *  NAME
+ *      -(void)swtichValueChanged:(id)sender
+ *
+ *  DESCRIPTION
+ *      For button has been touched.
+ *
+ */
 -(void)swtichValueChanged:(id)sender
 {
     UISwitch *switchUI = (UISwitch *)sender;
 
     if (switchUI == powerSwitch) {
         if (switchUI.on) {
+            BitmapPixel rgbSettingValue;
+
+            rgbSettingValue = [self getRGBSetValue];
+            [self setColorToBLEDeviceByRed:rgbSettingValue.red Green:rgbSettingValue.green Blue:rgbSettingValue.blue];
             [self setPowerStateToBLEDevice:TRUE];
         } else {
+            [self setColorToBLEDeviceByRed:0.0 Green:0.0 Blue:0.0];
             [self setPowerStateToBLEDevice:FALSE];
         }
     }
 }
 
+/**
+ *  NAME
+ *      -(void)sliderValueChanged:(id)sender
+ *
+ *  DESCRIPTION
+ *      For slider has been moved.
+ *
+ */
 -(void)sliderValueChanged:(id)sender
 {
     UISlider *sliderUI = (UISlider *) sender;
@@ -330,7 +445,7 @@
     int level = floor(colorBrightSlider.value);
     static int preColorTemp;
     static int preLevel;
-    
+
     if (sliderUI == colorTempSlider) {
         if (preColorTemp != colorTemp) {
             [palette setColorTempByUser:colorTemp];
@@ -353,12 +468,40 @@
     }
 }
 
+/**
+ *  NAME
+ *      -(BOOL)isValidTouchPointByRadius:(CGFloat)radius atX:(CGFloat)x atY:(CGFloat)y
+ *
+ *  DESCRIPTION
+ *      Calculator touch point, return TRUE if user touch in circle shape on color wheel.
+ *
+ */
+-(BOOL)isValidTouchPointByRadius:(CGFloat)radius atX:(CGFloat)x atY:(CGFloat)y
+{
+    CGFloat pointX = radius - x;
+    CGFloat pointY = y - radius;
+    CGFloat r_distance = sqrtf(pow(pointX, 2) + pow(pointY, 2));
+
+    if (r_distance > radius) {
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/**
+ *  NAME
+ *      -(BOOL)updateUIWithTouchEvent:(UITouch *)touch
+ *
+ *  DESCRIPTION
+ *      Update indicator and brightness image if user touch in circle shape on color wheel.
+ *
+ */
 -(BOOL)updateUIWithTouchEvent:(UITouch *)touch
 {
     CGFloat x = [touch locationInView:self.view].x;
     CGFloat y = [touch locationInView:self.view].y;
 
-    
     if ((x >= colorWheelImageView.frame.origin.x) &&
         (x < (colorWheelImageView.frame.origin.x +
               colorWheelImageView.frame.size.width)) &&
@@ -367,8 +510,10 @@
               colorWheelImageView.frame.size.height))) {
         CGFloat imagePointX = [touch locationInView:colorWheelImageView].x;
         CGFloat imagePointY = [touch locationInView:colorWheelImageView].y;
-        
-        if ([palette isValidPoint:(colorWheelImageView.frame.size.width / 2) atX:imagePointX atY:imagePointY]) {
+        CGFloat radius = colorWheelImageView.frame.size.width / 2.0;
+
+        if ([self isValidTouchPointByRadius:radius atX:imagePointX atY:imagePointY]) {
+            [palette getColorPixelByRadius:radius atX:imagePointX atY:imagePointY];
             [self updateIndicatorImageAt:x atY:y];
             [self updateBrightnessImage];
             return TRUE;
@@ -378,6 +523,14 @@
     return FALSE;
 }
 
+/**
+ *  NAME
+ *      -(BitmapPixel)getRGBSetValue
+ *
+ *  DESCRIPTION
+ *      Convert RGB with color level.
+ *
+ */
 -(BitmapPixel)getRGBSetValue
 {
     int level = floor(colorBrightSlider.value);
@@ -388,14 +541,21 @@
     return getRGBData;
 }
 
+/**
+ *  NAME
+ *      -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
+ *
+ *  DESCRIPTION
+ *      Update color brightness image.
+ *
+ */
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event
 {
     UITouch *touch = [touches anyObject];
 
-    
     if ([self updateUIWithTouchEvent:touch]) {
         BitmapPixel rgbSettingValue;
-        
+
         lastRGB = [palette getCurrentRGBAData];
         rgbSettingValue = [self getRGBSetValue];
 
@@ -406,6 +566,15 @@
     }
 }
 
+/**
+ *  NAME
+ *      -(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
+ *
+ *  DESCRIPTION
+ *      1. Modify colorBrightnessImage.
+ *      2. Set RGB to remote device 100mS per second.
+ *
+ */
 -(void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
 {
     UITouch *touch = [touches anyObject];
@@ -425,6 +594,15 @@
     }
 }
 
+/**
+ *  NAME
+ *      -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+ *
+ *  DESCRIPTION
+ *      1. Modify colorBrightnessImage
+ *      2. Set RGB to remote device.
+ *
+ */
 -(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
 {
     UITouch *touch = [touches anyObject];

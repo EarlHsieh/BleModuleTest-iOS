@@ -59,7 +59,7 @@
 
 -(UIImage *)createColorIndicateImageWithFrame:(CGRect)imageFrame;
 
--(BOOL)isValidPoint:(CGFloat)radius atX:(CGFloat)x atY:(CGFloat)y;
+-(void)getColorPixelByRadius:(CGFloat)radius atX:(CGFloat)x atY:(CGFloat)y;
 
 -(void)setRGBDataByUserOnImage:(UIImage *)image atX:(float)pointX atY:(float)pointY;
 

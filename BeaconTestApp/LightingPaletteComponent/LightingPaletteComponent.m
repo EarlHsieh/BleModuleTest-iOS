@@ -8,10 +8,7 @@
 
 #import "LightingPaletteComponent.h"
 
-#define COLOR_WHEEL_CIRCLE
-
 @implementation LightingPaletteComponent
-
 @synthesize colorWheelImage;
 @synthesize colorTempImage;
 @synthesize colorBrightnessImage;
@@ -23,7 +20,7 @@
 
 /**
  *  NAME
- *      init
+ *      -(id)init
  *
  *  DESCRIPTION
  *      Initail UIImage and image based information.
@@ -41,7 +38,7 @@
 
 /**
  *  NAME
- *      setColorTempByUser:(int)colorTemp
+ *      -(void)setColorTempByUser:(int)colorTemp
  *
  *  DESCRIPTION
  *      Update currentColor for UIImageView.
@@ -54,7 +51,7 @@
 
 /**
  *  NAME
- *      setRGBDataByUserOnImage:(UIImage *)image atX:(float)pointX atY:(float)pointY
+ *      -(void)setRGBDataByUserOnImage:(UIImage *)image atX:(float)pointX atY:(float)pointY
  *
  *  DESCRIPTION
  *      After user use color wheel image view to select color, update currentColor
@@ -98,7 +95,7 @@
 
 /**
  *  NAME
- *      newARGBBitmapContextWithSize:(CGSize)size
+ *      -(CGContextRef)newARGBBitmapContextWithSize:(CGSize)size
  *
  *  DESCRIPTION
  *      Create a null context for color wheel, it will set color pixel by pixel
@@ -157,23 +154,17 @@
 
 /**
  *  NAME
- *      isValidPointAtX:(float)x atY:(float)y
+ *      -(void)getColorPixelByRadius:(CGFloat)radius atX:(CGFloat)x atY:(CGFloat)y
  *
  *  DESCRIPTION
  *      This function only action when color wheel is circle.
  *
  */
--(BOOL)isValidPoint:(CGFloat)radius atX:(CGFloat)x atY:(CGFloat)y
+-(void)getColorPixelByRadius:(CGFloat)radius atX:(CGFloat)x atY:(CGFloat)y
 {
     CGFloat pointX = x - radius;
     CGFloat pointY = radius - y;
     CGFloat r_distance = sqrtf(pow(pointX, 2) + pow(pointY, 2));
-    
-#ifdef COLOR_WHEEL_CIRCLE
-    if (fabsf(r_distance) > radius) {
-        return FALSE;
-    }
-#endif
     
     r_distance = fmin(r_distance, radius);
     CGFloat angle = atan2(pointY, pointX);
@@ -183,13 +174,11 @@
     CGFloat perc_angle = angle / (2.0 * M_PI);
     
     currentColor = [colorConvert HSVToRGBByHue:perc_angle Saturation:r_distance / radius Value:1.0];
-    
-    return TRUE;
 }
 
 /**
  *  NAME
- *      setRGBAToBitmapData:(BitmapPixel)pixel atPointX:(long)pointX atPointY:(long)pointY
+ *      -(void)setRGBAToBitmapData:(BitmapPixel)pixel atPointX:(long)pointX atPointY:(long)pointY
  *
  *  DESCRIPTION
  *      Set bitmap data, for color wheel.
@@ -208,7 +197,7 @@
 
 /**
  *  NAME
- *      genBitmapDataToColorWheel
+ *      -(void)genBitmapDataToColorWheel
  *
  *  DESCRIPTION
  *      Set color pixel to bitmap data at color wheel image view
@@ -222,9 +211,8 @@
     
     for (CGFloat x = 0; x < imageWidth; ++x) {
         for (CGFloat y = 0; y < imageHeight; ++y) {
-            if ([self isValidPoint:radius atX:x atY:y]) {
-                [self setRGBAToBitmapData:currentColor atPointX:x atPointY:y];
-            }
+            [self getColorPixelByRadius:radius atX:x atY:y];
+            [self setRGBAToBitmapData:currentColor atPointX:x atPointY:y];
         }
     }
 
@@ -233,7 +221,7 @@
 
 /**
  *  NAME
- *      createColorWheelImage
+ *      -(UIImage *)createColorWheelImageWithFrame:(CGRect)imageFrame
  *
  *  DESCRIPTION
  *      Create a image view for color wheel.
@@ -258,7 +246,7 @@
 
 /**
  *  NAME
- *      makeColorTempArray
+ *      -(void)makeColorTempArray
  *
  *  DESCRIPTION
  *      Convert color temperature to RGBA into 2700K to 6500K.
@@ -276,7 +264,7 @@
 
 /**
  *  NAME
- *      createColorTempImage
+ *      -(UIImage *)createColorTempImageWithFrame:(CGRect)imageFrame
  *
  *  DESCRIPTION
  *      Create a image view for color temperature.
@@ -325,7 +313,7 @@
 
 /**
  *  NAME
- *      makeColorBrightnessArray
+ *      -(void)makeColorBrightnessArray
  *
  *  DESCRIPTION
  *      Create a 100 level array for make a color brightness view.
@@ -342,7 +330,7 @@
 
 /**
  *  NAME
- *      createColorBrightnessImage
+ *      -(UIImage *)createColorBrightnessImageWithFrame:(CGRect)imageFrame
  *
  *  Description
  *      Create a color UIImage for 100 level color brightness and return to UIImageView
@@ -392,7 +380,7 @@
 
 /**
  *  NAME
- *      createColorIndicateImage
+ *      -(UIImage *)createColorIndicateImageWithFrame:(CGRect)imageFrame
  *
  *  DESCRIPTION
  *      Make a color indicate Image on UIImage, and return this image to UIImageView
@@ -433,7 +421,15 @@
     return colorIndicatorImage;
 }
 
--(BitmapPixel) getCurrentRGBAData
+/**
+ *  NAME
+ *      -(BitmapPixel)getCurrentRGBAData
+ *
+ *  DESCRIPTION
+ *      return cureent color.
+ *
+ */
+-(BitmapPixel)getCurrentRGBAData
 {
     return currentColor;
 }
