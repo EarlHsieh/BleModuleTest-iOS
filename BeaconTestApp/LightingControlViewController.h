@@ -24,6 +24,7 @@
     UISwitch *powerSwitch;
     double updateTime;
     BOOL isOutputRGB;
+    BOOL isColorWheelTouched;
     BitmapPixel lastRGB;
 }
 
