@@ -504,20 +504,25 @@
 
 
     CGPoint colorWheelCenter = CGPointMake((colorWheelImageView.frame.origin.x +
-                                            colorWheelImageView.frame.size.width),
-                                            (colorWheelImageView.frame.origin.y +
-                                            colorWheelImageView.frame.size.width));
+                                            (colorWheelImageView.frame.size.width / 2)),
+                                           (colorWheelImageView.frame.origin.y +
+                                            (colorWheelImageView.frame.size.width / 2)));
     CGFloat remoteDistance = sqrt(pow(touchPoint.x - colorWheelCenter.x, 2) +
                                   pow(touchPoint.y - colorWheelCenter.y, 2));
     CGFloat radius = colorWheelImageView.frame.size.width / 2;
 
     if (remoteDistance > radius) {
         CGFloat n = radius / (remoteDistance - radius);
-        CGPoint correspondPoint = CGPointMake(colorWheelCenter.x + (n * touchPoint.x) / (1 + n),
-                                                  colorWheelCenter.y + (n * touchPoint.y) / (1 + n));
-        [palette getColorPixelByRadius:radius atX:correspondPoint.x atY:correspondPoint.y];
+        CGPoint correspondPoint = CGPointMake(((colorWheelCenter.x + (n * touchPoint.x)) / (1 + n)),
+                                              ((colorWheelCenter.y + (n * touchPoint.y)) / (1 + n)));
+
+        [palette getColorPixelByRadius:radius
+                                   atX:(correspondPoint.x - colorWheelImageView.frame.origin.x)
+                                   atY:(correspondPoint.y - colorWheelImageView.frame.origin.y)];
+
         [self updateIndicatorImageAt:correspondPoint.x atY:correspondPoint.y];
         [self updateBrightnessImage];
+
         return;
     }
 
@@ -558,30 +563,32 @@
 {
     UITouch *touch = [touches anyObject];
     CGPoint touchPoint = [touch locationInView:self.view];
-    
+
     if ((touchPoint.x >= colorWheelImageView.frame.origin.x) &&
         (touchPoint.x < (colorWheelImageView.frame.origin.x +
                         colorWheelImageView.frame.size.width)) &&
         (touchPoint.y >= colorWheelImageView.frame.origin.y) &&
         (touchPoint.y < (colorWheelImageView.frame.origin.y +
                          colorWheelImageView.frame.size.height))) {
-        // Update Color Palette
         CGPoint colorWheelPoint = [touch locationInView:colorWheelImageView];
         CGFloat radius = colorWheelImageView.frame.size.width / 2;
-        [palette getColorPixelByRadius:radius atX:colorWheelPoint.x atY:colorWheelPoint.y];
-        [self updateIndicatorImageAt:touchPoint.x atY:touchPoint.y];
-        [self updateBrightnessImage];
-        
 
-        // Set value to remote device
-        BitmapPixel rgbSettingValue;
-        lastRGB = [palette getCurrentRGBAData];
-        rgbSettingValue = [self getRGBSetValue];
-        
-        [self setColorToBLEDeviceByRed:rgbSettingValue.red Green:rgbSettingValue.green Blue:rgbSettingValue.blue];
-        updateTime = [[NSDate date]timeIntervalSince1970];
-        isOutputRGB = TRUE;
-        isColorWheelTouched = TRUE;
+        if ([self isValidTouchPointByRadius:radius atX:colorWheelPoint.x atY:colorWheelPoint.y]) {
+            // Update Color Palette
+            [palette getColorPixelByRadius:radius atX:colorWheelPoint.x atY:colorWheelPoint.y];
+            [self updateIndicatorImageAt:touchPoint.x atY:touchPoint.y];
+            [self updateBrightnessImage];
+            isColorWheelTouched = TRUE;
+
+            // Set value to remote device
+            BitmapPixel rgbSettingValue;
+            lastRGB = [palette getCurrentRGBAData];
+            rgbSettingValue = [self getRGBSetValue];
+
+            [self setColorToBLEDeviceByRed:rgbSettingValue.red Green:rgbSettingValue.green Blue:rgbSettingValue.blue];
+            updateTime = [[NSDate date]timeIntervalSince1970];
+            isOutputRGB = TRUE;
+        }
     }
 }
 
@@ -600,8 +607,8 @@
 
     if (isColorWheelTouched == TRUE) {
         double currentTime = [[NSDate date]timeIntervalSince1970];
-        
         [self updateUIWithTouchEvent:touch];
+
         if ((currentTime - updateTime) > 0.100) {
             BitmapPixel rgbSettingValue;
             
@@ -630,8 +637,8 @@
 
     if (isColorWheelTouched == TRUE) {
         [self updateUIWithTouchEvent:touch];
+
         BitmapPixel rgbSettingValue;
-        
         lastRGB = [palette getCurrentRGBAData];
         rgbSettingValue = [self getRGBSetValue];
         
@@ -639,5 +646,6 @@
         isColorWheelTouched = FALSE;
     }
 }
+
 
 @end

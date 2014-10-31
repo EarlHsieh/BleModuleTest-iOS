@@ -7,7 +7,6 @@
 //
 
 #import "ViewController.h"
-//#import "BLE.h"
 
 @interface ViewController ()
 
@@ -170,6 +169,5 @@
             
     }
 }
-
 
 @end
